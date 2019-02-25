@@ -1,0 +1,168 @@
+------------------
+--CUD
+------------------
+DESC author
+
+ALTER TABLE book ADD CONSTRAINT pk_book_id PRIMARY KEY ( book_id );
+
+ALTER TABLE book
+    ADD CONSTRAINT fk_author_id FOREIGN KEY ( author_id ) -- FOREIGN KEY 적용 컬럼
+        REFERENCES author ( author_id ); -- 참조 컬럼
+
+DESC book
+
+commit;
+
+--기본적인 INSERT
+
+INSERT INTO author VALUES (
+    1,
+    '박경리',
+    '토지작가'
+);
+
+--특정 컬럼 지정 내용입력
+
+INSERT INTO author (
+    author_id,
+    author_name
+) VALUES (
+    2,
+    '김영하'
+);
+
+SELECT
+    *
+FROM
+    author;
+
+--CUD 내용 반영
+
+COMMIT;
+
+CREATE TABLE book (
+    book_id     NUMBER(10),
+    title       VARCHAR2(50),
+    pub_date    DATE DEFAULT SYSDATE,
+    author_id   NUMBER(10)
+);
+
+COMMIT;
+
+INSERT INTO book VALUES (
+    1,
+    '토지',
+    SYSDATE,
+    1
+);
+
+INSERT INTO book (
+    book_id,
+    title,
+    author_id
+) VALUES (
+    2,
+    '살인자의 기억법',
+    2
+);
+
+SELECT
+    *
+FROM
+    book;
+
+COMMIT;
+
+ROLLBACK;
+
+SELECT
+    *
+FROM
+    book;
+
+--UPDATE
+
+UPDATE author
+    SET
+        author_desc = '알쓸신잡 출연'
+WHERE
+    author_name = '김영하';
+--주의: 특별한 상황이 아니면 update, delete 시 where 조건 **
+
+COMMIT;
+
+SELECT
+    *
+FROM
+    author;
+
+--연습
+--hr.employees 테이블로부터 department_id 10, 20, 30
+--새 테이블로 만들고
+
+CREATE TABLE emp_123
+    AS
+        ( SELECT
+            *
+          FROM
+            hr.employees
+          WHERE
+            department_id IN (
+                10,
+                20,
+                30
+            )
+        );
+
+SELECT
+    *
+FROM
+    emp_123;
+
+COMMIT;
+
+SELECT
+    first_name,
+    salary,
+    department_id
+FROM
+    emp_123;
+    
+--department_id 30인 직원들의 급여를 10% 올려봅시다.
+update emp_123
+set salary = salary * 0.1
+where department_id=30;
+
+select first_name, salary, department_id
+from emp_123;
+--잘못해서 10%로 깎아버림
+rollback;--롤백
+
+update emp_123
+set salary = salary + salary * 0.1
+where department_id=30;
+
+select first_name, salary, department_id
+from emp_123;
+
+rollback; -- 다시 원상복구 시켜주자 그냥 예제로 해본거니까
+
+select first_name, job_id from emp_123;
+
+delete from emp_123
+where job_id like 'MK_%';
+
+select first_name, job_id from emp_123;
+
+rollback;
+delete from emp_123; -- 테이블 내 전체 row 삭제도 롤백 가능
+rollback;
+
+--현재 급여 평균보다 높은 사람은 다 내보내겠습니다.
+DELETE FROM emp_123
+where salary > (SELECT avg(salary) from emp_123);
+
+select * from emp_123;
+
+rollback;
+

@@ -1,0 +1,223 @@
+---------------
+--DB objects
+---------------
+
+--VIEW -> 권한이 있어야 함
+GRANT
+    CREATE VIEW
+TO bituser;
+
+--SimpleView
+
+CREATE OR REPLACE VIEW emp_10 --view 이름
+
+ AS
+    SELECT
+        employee_id,
+        first_name,
+        last_name,
+        salary
+    FROM
+        emp_123
+    WHERE
+        department_id = 10;
+
+COMMIT;
+
+DESC emp_10;
+
+SELECT
+    first_name
+    || ' '
+    || last_name,
+    salary
+FROM
+    emp_10;
+
+--simple view는 제약 사항에 걸리지 않으면
+--insert, update, delete 작업도 수행할 수 있음.
+
+UPDATE emp_10
+    SET
+        salary = salary * 2;
+
+SELECT
+    first_name
+    || ' '
+    || last_name,
+    salary
+FROM
+    emp_10;
+
+SELECT
+    *
+FROM
+    emp_123
+WHERE
+    employee_id = 200;
+
+--veiw는 가능하면 조회용으로만 씁시다 readonly 옵션
+
+--complex view
+
+CREATE OR REPLACE VIEW book_detail (
+    book_id,
+    title,
+    author_name,
+    pub_date
+) AS
+    SELECT
+        book_id,
+        title,
+        author_name,
+        pub_date
+    FROM
+        book b,
+        author a
+    WHERE
+        b.author_id = a.author_id;
+
+DESC book_detail;
+
+SELECT
+    *
+FROM
+    book_detail;
+
+--view 확인을 위한 data dictionary
+
+SELECT
+    *
+FROM
+    user_views;
+    
+--user objects 딕셔너리를 이용 확인
+
+SELECT
+    object_name,
+    status
+FROM
+    user_objects
+WHERE
+    object_type = 'VIEW';
+
+COMMIT;
+
+DROP VIEW book_detail;
+
+SELECT
+    *
+FROM
+    user_views;
+    
+------------------------
+--INDEX
+-----------------------
+
+CREATE TABLE s_emp
+    AS
+        SELECT
+            *
+        FROM
+            hr.employees;
+
+COMMIT;
+
+--사용자가 가지고 있는 인덱스를 확인
+
+SELECT
+    *
+FROM
+    user_indexes;
+
+--s_emp employee_id에 UNIQUE INDEX 만들어 봅시다
+
+CREATE UNIQUE INDEX s_emp_id_unique ON
+    s_emp ( employee_id );
+
+SELECT
+    *
+FROM
+    user_indexes;
+
+--어느 컬럼에 인덱스가 붙어있는지 확인
+
+SELECT
+    *
+FROM
+    user_ind_columns;
+
+--인덱스 삭제
+
+DROP INDEX s_emp_id_unique;
+
+SELECT
+    *
+FROM
+    user_ind_columns;
+
+COMMIT;
+
+----------------------
+--SEQUENCE
+-----------------------
+--author테이블 pk를 위한 시퀀스를 만들어 이용
+
+SELECT
+    MAX(author_id) + 1
+FROM
+    author;
+
+CREATE SEQUENCE seq_author_id START WITH 3 INCREMENT BY 1 MAXVALUE 1000000;
+
+COMMIT;
+
+--이 시퀀스를 이용하여 author 추가
+
+INSERT INTO author (
+    author_id,
+    author_name
+) VALUES (
+    seq_author_id.NEXTVAL,
+    'Steven King'
+);
+
+SELECT
+    *
+FROM
+    author; 
+
+SELECT
+    seq_author_id.CURRVAL
+FROM
+    user_sequences; -- 시퀀스의 현재 상태 확인
+
+COMMIT;
+
+--시퀀스를 위한 딕셔너리
+
+SELECT
+    *
+FROM
+    user_sequences;
+
+SELECT
+    *
+FROM
+    user_objects
+WHERE
+    object_type = 'SEQUENCE';
+
+--book_id를 위한 시퀀스
+
+SELECT
+    MAX(book_id) + 1
+FROM
+    book;
+
+CREATE SEQUENCE seq_book_id START WITH 3 INCREMENT BY 1 MAXVALUE 10000000;
+
+SELECT
+    *
+FROM
+    user_sequences;
